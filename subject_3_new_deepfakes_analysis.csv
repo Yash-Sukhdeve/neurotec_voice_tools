@@ -1,0 +1,15 @@
+Deepfake_File,Reference_Data,Score,Status,Confidence,Notes
+subject_3_chunk_11_lc0_0_16K.wav,chunk_11_lc0.wav,66,succeeded,medium,
+subject_3_chunk_11_lc0_1_16K.wav,chunk_11_lc0.wav,74,succeeded,high,
+subject_3_chunk_11_lc0_2_16K.wav,chunk_11_lc0.wav,73,succeeded,high,
+subject_3_chunk_11_lc0_3_16K.wav,chunk_11_lc0.wav,63,succeeded,medium,
+subject_3_chunk_11_lc0_4_16K.wav,chunk_11_lc0.wav,64,succeeded,medium,
+subject_3_chunk_11_lc0_5_16K.wav,chunk_11_lc0.wav,82,succeeded,high,BEST_SCORE_LC0
+subject_3_chunk_11_lc0_6_16K.wav,chunk_11_lc0.wav,69,succeeded,high,
+subject_3_chunk_11_lc0_7_16K.wav,chunk_11_lc0.wav,77,succeeded,high,
+subject_3_chunk_11_lc0_8_16K.wav,chunk_11_lc0.wav,81,succeeded,high,
+subject_3_chunk_11_lc0_5_16K.wav,chunk_11_lc1.wav,67,succeeded,medium,BEST_FILE_AGAINST_LC1
+subject_3_chunk_11_lc1_0_16K.wav,chunk_11_lc1.wav,45,failed,low,
+subject_3_chunk_11_lc1_5_16K.wav,chunk_11_lc1.wav,45,failed,low,
+subject_3_chunk_11_lc1_7_16K.wav,chunk_11_lc1.wav,48,succeeded,medium,THRESHOLD_EXACT
+subject_3_chunk_11_lc1_8_16K.wav,chunk_11_lc1.wav,62,succeeded,medium,

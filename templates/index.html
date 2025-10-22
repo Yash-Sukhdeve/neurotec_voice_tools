@@ -1,0 +1,398 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="text-center mb-5">
+            <h1 class="display-4">
+                <i class="fas fa-microphone text-primary"></i>
+                Voice Verification Tool
+            </h1>
+            <p class="lead text-muted">
+                Upload two audio files to calculate VeriSpeak similarity scores using Neurotec SDK
+            </p>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs mb-4" id="verificationTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="single-tab" data-bs-toggle="tab" data-bs-target="#single" type="button" role="tab">
+                    <i class="fas fa-file-audio"></i>
+                    Single Verification
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="batch-tab" data-bs-toggle="tab" data-bs-target="#batch" type="button" role="tab">
+                    <i class="fas fa-layer-group"></i>
+                    Batch Processing
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="verificationTabsContent">
+            <!-- Single Verification Tab -->
+            <div class="tab-pane fade show active" id="single" role="tabpanel">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-upload"></i>
+                            Upload Audio Files
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="verificationForm" enctype="multipart/form-data">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="referenceFile" class="form-label">
+                                        <i class="fas fa-microphone"></i>
+                                        Reference Audio
+                                    </label>
+                                    <div class="upload-area" id="refUploadArea">
+                                        <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                        <p class="mb-2">Click to select or drag reference file here</p>
+                                        <small class="text-muted">Supported: WAV, MP3, FLAC, M4A, AAC, OGG</small>
+                                        <input type="file" class="form-control d-none" id="referenceFile" name="reference_file" accept=".wav,.mp3,.flac,.m4a,.aac,.ogg" required>
+                                    </div>
+                                    <div id="refFileInfo" class="file-info d-none"></div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="candidateFile" class="form-label">
+                                        <i class="fas fa-microphone"></i>
+                                        Candidate Audio
+                                    </label>
+                                    <div class="upload-area" id="candUploadArea">
+                                        <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                        <p class="mb-2">Click to select or drag candidate file here</p>
+                                        <small class="text-muted">Supported: WAV, MP3, FLAC, M4A, AAC, OGG</small>
+                                        <input type="file" class="form-control d-none" id="candidateFile" name="candidate_file" accept=".wav,.mp3,.flac,.m4a,.aac,.ogg" required>
+                                    </div>
+                                    <div id="candFileInfo" class="file-info d-none"></div>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <span class="spinner spinner-border spinner-border-sm me-2" role="status"></span>
+                                    <span class="btn-text">
+                                        <i class="fas fa-play"></i>
+                                        Verify Voices
+                                    </span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Results Section -->
+                <div id="results" class="mt-4 d-none"></div>
+            </div>
+
+            <!-- Batch Processing Tab -->
+            <div class="tab-pane fade" id="batch" role="tabpanel">
+                <div class="card shadow">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-layer-group"></i>
+                            Batch Processing
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            Upload multiple audio files. The first file will be used as reference and compared against all others.
+                        </div>
+                        <form id="batchForm" enctype="multipart/form-data">
+                            <div class="upload-area" id="batchUploadArea">
+                                <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                <p class="mb-2">Click to select or drag multiple files here</p>
+                                <small class="text-muted">Select at least 2 files for batch processing</small>
+                                <input type="file" class="form-control d-none" id="batchFiles" name="files" multiple accept=".wav,.mp3,.flac,.m4a,.aac,.ogg" required>
+                            </div>
+                            <div id="batchFileList" class="mt-3"></div>
+                            <div class="text-center mt-3">
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <span class="spinner spinner-border spinner-border-sm me-2" role="status"></span>
+                                    <span class="btn-text">
+                                        <i class="fas fa-cogs"></i>
+                                        Process Batch
+                                    </span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Batch Results Section -->
+                <div id="batchResults" class="mt-4 d-none"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // File upload handling
+    function setupFileUpload(uploadArea, fileInput, fileInfoDiv, multiple = false) {
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (multiple) {
+                fileInput.files = e.dataTransfer.files;
+            } else {
+                if (e.dataTransfer.files.length > 0) {
+                    fileInput.files = e.dataTransfer.files;
+                }
+            }
+            updateFileInfo(fileInput, fileInfoDiv, multiple);
+        });
+        
+        fileInput.addEventListener('change', () => {
+            updateFileInfo(fileInput, fileInfoDiv, multiple);
+        });
+    }
+    
+    function updateFileInfo(fileInput, fileInfoDiv, multiple = false) {
+        if (fileInput.files.length > 0) {
+            fileInfoDiv.classList.remove('d-none');
+            if (multiple) {
+                const fileList = Array.from(fileInput.files).map(file => 
+                    `<div class="d-flex justify-content-between align-items-center mb-1">
+                        <span><i class="fas fa-file-audio text-primary"></i> ${file.name}</span>
+                        <small class="text-muted">${(file.size / 1024 / 1024).toFixed(2)} MB</small>
+                    </div>`
+                ).join('');
+                fileInfoDiv.innerHTML = `<strong>Selected files (${fileInput.files.length}):</strong><br>${fileList}`;
+            } else {
+                const file = fileInput.files[0];
+                fileInfoDiv.innerHTML = `
+                    <strong>Selected:</strong> ${file.name}<br>
+                    <small class="text-muted">Size: ${(file.size / 1024 / 1024).toFixed(2)} MB</small>
+                `;
+            }
+        } else {
+            fileInfoDiv.classList.add('d-none');
+        }
+    }
+    
+    // Setup file uploads
+    setupFileUpload(
+        document.getElementById('refUploadArea'),
+        document.getElementById('referenceFile'),
+        document.getElementById('refFileInfo')
+    );
+    
+    setupFileUpload(
+        document.getElementById('candUploadArea'),
+        document.getElementById('candidateFile'),
+        document.getElementById('candFileInfo')
+    );
+    
+    setupFileUpload(
+        document.getElementById('batchUploadArea'),
+        document.getElementById('batchFiles'),
+        document.getElementById('batchFileList'),
+        true
+    );
+    
+    // Single verification form handling
+    document.getElementById('verificationForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const form = e.target;
+        const button = form.querySelector('button[type="submit"]');
+        const resultsDiv = document.getElementById('results');
+        
+        // Clear previous results
+        resultsDiv.innerHTML = '';
+        resultsDiv.classList.add('d-none');
+        
+        showLoading(button);
+        
+        try {
+            const formData = new FormData(form);
+            const response = await fetch('/verify', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                displayResult(result, resultsDiv);
+            } else {
+                showError(result.error || 'Verification failed', form.parentElement);
+            }
+        } catch (error) {
+            showError('Network error: ' + error.message, form.parentElement);
+        } finally {
+            hideLoading(button);
+        }
+    });
+    
+    // Batch verification form handling
+    document.getElementById('batchForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const form = e.target;
+        const button = form.querySelector('button[type="submit"]');
+        const resultsDiv = document.getElementById('batchResults');
+        
+        // Clear previous results
+        resultsDiv.innerHTML = '';
+        resultsDiv.classList.add('d-none');
+        
+        showLoading(button);
+        
+        try {
+            const formData = new FormData(form);
+            const response = await fetch('/batch_verify', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                displayBatchResults(result, resultsDiv);
+            } else {
+                showError(result.error || 'Batch processing failed', form.parentElement);
+            }
+        } catch (error) {
+            showError('Network error: ' + error.message, form.parentElement);
+        } finally {
+            hideLoading(button);
+        }
+    });
+    
+    function displayResult(result, container) {
+        const confidenceClass = getConfidenceClass(result.confidence_level);
+        const confidenceIcon = getConfidenceIcon(result.confidence_level);
+        const isMatch = result.verification_status === 'succeeded';
+        
+        container.innerHTML = `
+            <div class="card result-card shadow">
+                <div class="card-header ${isMatch ? 'bg-success' : 'bg-danger'} text-white">
+                    <h5 class="mb-0">
+                        <i class="${isMatch ? 'fas fa-check' : 'fas fa-times'}"></i>
+                        Verification ${isMatch ? 'MATCH' : 'NO MATCH'}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-file-audio text-primary"></i> Reference File</h6>
+                            <p class="text-muted">${result.reference_filename}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-file-audio text-primary"></i> Candidate File</h6>
+                            <p class="text-muted">${result.candidate_filename}</p>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h3 class="text-primary">${result.score}</h3>
+                                <small class="text-muted">Verification Score</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h3 class="text-info">${result.threshold}</h3>
+                                <small class="text-muted">Threshold</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h3 class="text-secondary">${result.far_percentage}%</h3>
+                                <small class="text-muted">FAR</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h3 class="${confidenceClass}">
+                                    <i class="${confidenceIcon}"></i>
+                                </h3>
+                                <small class="text-muted">${result.confidence_level.replace('_', ' ').toUpperCase()}</small>
+                            </div>
+                        </div>
+                    </div>
+                    ${result.error_message ? `
+                        <div class="alert alert-warning mt-3">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            ${result.error_message}
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+        
+        container.classList.remove('d-none');
+    }
+    
+    function displayBatchResults(result, container) {
+        const matchCount = result.results.filter(r => r.verification_status === 'succeeded').length;
+        
+        container.innerHTML = `
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar"></i>
+                        Batch Processing Results
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong>Summary:</strong> ${matchCount}/${result.total_pairs} matches found
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Reference</th>
+                                    <th>Candidate</th>
+                                    <th>Score</th>
+                                    <th>Status</th>
+                                    <th>Confidence</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${result.results.map(r => `
+                                    <tr class="${r.verification_status === 'succeeded' ? 'table-success' : 'table-danger'}">
+                                        <td><i class="fas fa-file-audio text-primary"></i> ${r.reference_filename}</td>
+                                        <td><i class="fas fa-file-audio text-primary"></i> ${r.candidate_filename}</td>
+                                        <td><strong>${r.score}</strong></td>
+                                        <td>
+                                            <span class="badge ${r.verification_status === 'succeeded' ? 'bg-success' : 'bg-danger'}">
+                                                ${r.verification_status === 'succeeded' ? 'MATCH' : 'NO MATCH'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="${getConfidenceClass(r.confidence_level)}">
+                                                <i class="${getConfidenceIcon(r.confidence_level)}"></i>
+                                                ${r.confidence_level.replace('_', ' ').toUpperCase()}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        container.classList.remove('d-none');
+    }
+</script>
+{% endblock %}
