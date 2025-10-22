@@ -1,0 +1,26 @@
+# Ignore audio files
+*.wav
+*.mp3
+*.flac
+*.aac
+*.m4a
+*.ogg
+*.oga
+*.opus
+*.wma
+*.aiff
+*.aif
+*.aifc
+*.au
+*.snd
+*.amr
+*.caf
+*.mid
+*.midi
+*.ra
+*.ram
+
+# Optional: common Python cache/artifacts (uncomment if desired)
+# __pycache__/
+# *.py[cod]
+# *.pyo
